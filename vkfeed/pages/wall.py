@@ -200,6 +200,9 @@ class WallPage(webapp2.RequestHandler):
 
             self.response.headers[b'Content-Type'] = b'text/html; charset=utf-8'
             self.response.out.write(vkfeed.utils.render_template('error.html', { 'error': error }))
+
+            print e
+            print '---\n'
         else:
             if http_status == httplib.OK:
                 self.response.headers[b'Content-Type'] = b'application/rss+xml'

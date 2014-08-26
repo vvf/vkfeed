@@ -15,3 +15,4 @@ app = WSGIApplication([
     ( '.*',                   NotFoundPage ),
 ], debug = False)
 
+application = app

@@ -9,8 +9,14 @@ import datetime
 import logging
 import re
 import urllib
+import os
 
-from google.appengine.api import memcache
+#import memcache
+import pylibmc
+if os.environ.get('MEMCACHIER_SERVERS'):
+    memcache = pylibmc.Client(os.environ.get('MEMCACHIER_SERVERS', '').split(','))
+else:
+    memcache = dict() # just store in RAM
 
 import vkfeed.utils
 from vkfeed import constants
@@ -71,7 +77,7 @@ def read(profile_name, min_timestamp, max_posts_num, foreign_posts, show_photo, 
 
 
     wall_request_fingerprint = '{0}|{1}|{2}'.format(user['id'], int(foreign_posts), max_posts_num)
-    last_post_num = memcache.get(wall_request_fingerprint, 'post_stat')
+    last_post_num = None # memcache.get(wall_request_fingerprint) or 'post_stat'
 
     if last_post_num is None:
         LOG.info('There is no statistics on previous number of posts.')
@@ -226,7 +232,7 @@ def read(profile_name, min_timestamp, max_posts_num, foreign_posts, show_photo, 
         })
 
     if last_post_num != len(posts):
-        memcache.set(wall_request_fingerprint, len(posts), namespace = 'post_stat')
+        pass #memcache.set(wall_request_fingerprint, len(posts), namespace = 'post_stat')
 
     return {
         'url':        constants.VK_URL + profile_name,
@@ -332,7 +338,7 @@ def _get_profile_url(profile_id):
 def _get_user(profile_name):
     '''Returns user info by profile name.'''
 
-    user = memcache.get(profile_name, 'users')
+    user = None # memcache.get(profile_name) or 'users'
     if user is not None:
         LOG.info('Got the profile info from memcache.')
 
@@ -372,7 +378,7 @@ def _get_user(profile_name):
             except ServerError as e:
                 # Invalid group ID
                 if e.code in (100, 125):
-                    memcache.set(profile_name, {}, namespace = 'users', time = constants.HOUR_SECONDS)
+                    # memcache.set(profile_name, {}, namespace = 'users', time = constants.HOUR_SECONDS)
                     raise ServerError(113, 'Пользователя не существует.')
                 else:
                     raise e
@@ -386,7 +392,7 @@ def _get_user(profile_name):
     else:
         user['photo'] = profile['photo']
 
-    memcache.set(profile_name, user, namespace = 'users', time = constants.DAY_SECONDS)
+    # memcache.set(profile_name, user, namespace = 'users', time = constants.DAY_SECONDS)
 
     return user
 

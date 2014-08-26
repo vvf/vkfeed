@@ -11,8 +11,13 @@ import os
 import re
 
 if not os.getenv('VKFEED_TESTS'):
-    import google.appengine.api.urlfetch as urlfetch
-    from google.appengine.ext.webapp import template
+#    import google.appengine.api.urlfetch as urlfetch
+#    from google.appengine.ext.webapp import template
+    import urlfetch
+    import jinja2
+    jnjenv = jinja2.Environment()
+    jnjenv.loader = jinja2.FileSystemLoader('./templates/')
+    
 
 from vkfeed.core import Error
 
@@ -100,7 +105,9 @@ def http_timestamp(date):
 def render_template(name, params = {}):
     '''Renders the specified template.'''
 
-    return template.render(os.path.join('templates', name), params)
+    tpl = jnjenv.loader.load(jnjenv, name)
+    return tpl.render( params )
+#    return template.render(os.path.join('templates', name), params)
 
 
 def zero_subscribers(user_agent):
